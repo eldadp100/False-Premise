@@ -2,6 +2,8 @@ from transformers import BartForConditionalGeneration, BartTokenizer, AdamW
 import torch
 from torch.utils.data import DataLoader
 
+import create_data
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Simple pretrained use:
@@ -20,13 +22,19 @@ model.to(device)
 model.train()
 optimizer = AdamW(model.parameters(), lr=5e-5)
 
+dataset = create_data.QuestionPremiseDataset(create_data.data)
 train_loader = DataLoader(dataset)
 for epoch in range(epochs_num):
     for batch in train_loader:
-        input_ids = batch['input_ids'].to(device)
-        attention_mask = batch['attention_mask'].to(device)
-        labels = batch['labels'].to(device)
-        loss = model(input_ids, attention_mask=attention_mask, labels=labels)[0]
+        question, premise, is_a_true_premise = batch
+        q_tok = tok(question, return_tensors='pt')
+        question_input_ids = q_tok['input_ids'].to(device)
+        question_attention_mask = q_tok['attention_mask'].to(device)
+
+        premise_tok = tok(premise, return_tensors='pt')
+        premise_input_ids = premise_tok['input_ids'].to(device)
+
+        loss = model(question_input_ids, attention_mask=question_attention_mask, labels=premise_input_ids)[0]
 
         optimizer.zero_grad()
         loss.backward()
