@@ -28,7 +28,7 @@ for i in range(len(founder_company)):
     for j in range(len(founder_company)):
         data.append((f"when did {founder_company[i][0]} found {founder_company[j][1]}?",
                      f"{founder_company[i][0]} found {founder_company[j][1]}", i == j))
-        data.append((f"how much {founder_company[i][1]} that founded by {founder_company[j][i]} worth?",
+        data.append((f"how much {founder_company[i][1]} that founded by {founder_company[j][0]} worth?",
                      f"{founder_company[i][0]} found {founder_company[j][1]}", i == j))
 
 # when did x1 found y1?  True Premise
