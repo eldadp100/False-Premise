@@ -134,7 +134,7 @@ class QuestionPremiseDataset(Dataset):
         return len(self.data_triples)
 
     def __getitem__(self, item):
-        return self.data_triples[i]
+        return self.data_triples[item]
 
 
 # test
@@ -143,3 +143,25 @@ if __name__ == '__main__':
     print(len(dataset))
     for i in range(10):
         print(dataset[i])
+
+"""
+
+    Wikidata Inventor-Gadget Query:
+    
+    SELECT ?inventor ?inventorLabel ?gadget ?gadgetLabel WHERE {
+      ?gadget wdt:P61 ?inventor.
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+    }
+
+    
+    Business-Founder
+    SELECT DISTINCT ?business ?founder ?businessLabel ?officialname  ?stockexchangeLabel
+    WHERE {
+       ?business wdt:P31/wdt:P279* wd:Q4830453 .
+       ?business wdt:P414 ?stockexchange .
+       SERVICE wikibase:label { bd:serviceParam wikibase:language "en" } .
+       OPTIONAL { ?business wdt:P112 ?founder } .
+       OPTIONAL { ?business wdt:P1448 ?officialname FILTER( LANG(?officialname) = "en" ) } .
+    }
+    ORDER BY ?business
+"""
