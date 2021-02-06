@@ -22,13 +22,27 @@ inventor_product = [
 founder_company = [
     ("bill gates", "microsoft"),
     ("Elon Mask", "Tesla"),
-    ("Mark Zuckerberg", "Facebook")
+    ("Mark Zuckerberg", "Facebook"),
+    ("Henry Ford", "Ford"),
+    ("Jeff Bezos", "Amazon"),
+    ("apple", "Steve Jobs")
 ]
+founder_current_CEO_not_founder = [
+    ("apple", "Tim Cook")
+]
+founder_company_questions_starts = ["when did", "when", "how did", "how", "where", "where did", "in which way",
+                                    "why did", "who was involved when"]
+
 for i in range(len(founder_company)):
     for j in range(len(founder_company)):
-        data.append((f"when did {founder_company[i][0]} found {founder_company[j][1]}?",
+        for q_s in founder_company_questions_starts:
+            data.append((f"{q_s} {founder_company[i][0]} found {founder_company[j][1]}?",
+                         f"{founder_company[i][0]} found {founder_company[j][1]}", i == j))
+
+        data.append((f"how much {founder_company[i][1]} that was founded by {founder_company[j][0]} worth?",
                      f"{founder_company[i][0]} found {founder_company[j][1]}", i == j))
-        data.append((f"how much {founder_company[i][1]} that founded by {founder_company[j][0]} worth?",
+
+        data.append((f"what was the motive of {founder_company[i][0]} to found {founder_company[j][1]}?",
                      f"{founder_company[i][0]} found {founder_company[j][1]}", i == j))
 
 # when did x1 found y1?  True Premise
@@ -40,9 +54,9 @@ for i in range(len(founder_company)):
 
 # how may legs does a green dog have?      premise - dogs can be green      False Premise
 # where is the natural living place of yellow penguins?
-animals = ["dog", "cat", "elephant"]
+animals = ["dog", "cat", "elephant", "wolf"]
 real_colors = ["brown", "gray"]
-fake_colors = ["green", "purple", "blue"]
+fake_colors = ["green", "purple", "blue", "pink"]
 for a in animals:
     for c in real_colors:
         data.append((f"why {c} {a} has 2 heads?", f"{a} can be {c} colored", True))
@@ -54,6 +68,29 @@ for a in animals:
         data.append((f"how many legs does a {c} {a} has?", f"{a} has legs and {a} can be {c} colored", False))
         data.append((f"how many arms does a {c} {a} has?", f"{a} has arms and {a} can be {c} colored", False))
         data.append((f"where is the natural living place of {c} {a}s?", f"{a} can be {c} colored", False))
+
+# Pink animals
+
+animals = ["pig", "ostrich"]
+real_colors = ["pink"]
+fake_colors = ["yellow", "purple", "blue"]
+for a in animals:
+    for c in real_colors:
+        data.append((f"why {c} {a} has 2 heads?", f"{a} can be {c} colored", True))
+        data.append((f"how many legs does a {c} {a} has?", f"{a} has legs and {a} can be {c} colored", True))
+        data.append((f"how many arms does a {c} {a} has?", f"{a} has arms and {a} can be {c} colored", False))
+        data.append((f"where is the natural living place of {c} {a}s?", f"{a} can be {c} colored", True))
+    for c in fake_colors:
+        data.append((f"why {c} {a} has 2 heads?", f"{a} can be {c} colored", False))
+        data.append((f"how many legs does a {c} {a} has?", f"{a} has legs and {a} can be {c} colored", False))
+        data.append((f"how many arms does a {c} {a} has?", f"{a} has arms and {a} can be {c} colored", False))
+        data.append((f"where is the natural living place of {c} {a}s?", f"{a} can be {c} colored", False))
+
+# 2 legs animals
+
+
+# 2 hands 2 legs animals - monkeys...
+
 
 """ rule 3: not true fact with why at start """
 
@@ -98,3 +135,11 @@ class QuestionPremiseDataset(Dataset):
 
     def __getitem__(self, item):
         return self.data_triples[i]
+
+
+# test
+if __name__ == '__main__':
+    dataset = QuestionPremiseDataset(data)
+    print(len(dataset))
+    for i in range(10):
+        print(dataset[i])
