@@ -50,10 +50,6 @@ for epoch in range(epochs_num):
         question, premise, is_a_true_premise = batch
         q_tok = tok(question, return_tensors='pt')
         question_input_ids = q_tok['input_ids'].to(device)
-        question_attention_mask = q_tok['attention_mask'].to(device)
-
-        premise_tok = tok(premise, return_tensors='pt')
-        premise_input_ids = premise_tok['input_ids'].to(device)
 
         print(question)
         print(tok.batch_decode(model.generate(question_input_ids), skip_special_tokens=True))
