@@ -5,7 +5,6 @@ import random
 import load_data
 from datetime import datetime
 import losses
-from src.from_bart_output_to_bert_input import classify_with_bart
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -41,7 +40,7 @@ for i, param in enumerate(model.parameters()):
 optimizer = AdamW(model.parameters(), lr=lr)
 disc_optimizer = torch.optim.Adam(discriminator.parameters(), lr=lr)
 
-dataset = load_data.QuestionPremiseDataset(dataset_path, tok, with_facts=False)
+dataset = load_data.QuestionPremiseDataset(dataset_path, tok, with_facts=True)
 
 split_idx = int(len(dataset) * 0.7)
 train_dataset, test_dataset = torch.utils.data.random_split(dataset, [split_idx, len(dataset) - split_idx])
@@ -52,24 +51,30 @@ print_test_each_time = 10
 for epoch in range(n_epochs):
     curr_loss = 0.
     for i, batch in enumerate(train_loader):
-        question, premise = batch
-        q_tok = tok(question, return_tensors='pt')
-        question_input_ids = q_tok['input_ids'].to(device)
-        question_attention_mask = q_tok['attention_mask'].to(device)
 
-        premise_tok = tok(premise, return_tensors='pt')
-        premise_input_ids = premise_tok['input_ids'].to(device)
+        question, premise, fact = batch
+        if fact[0] == '':
+            q_tok = tok(question, return_tensors='pt')
+            question_input_ids = q_tok['input_ids'].to(device)
+            question_attention_mask = q_tok['attention_mask'].to(device)
 
-        # loss = model(question_input_ids, attention_mask=question_attention_mask, labels=premise_input_ids)[0]
+            premise_tok = tok(premise, return_tensors='pt')
+            premise_input_ids = premise_tok['input_ids'].to(device)
 
-        q_model_out = model(question_input_ids)['logits'][0].softmax(-1)
-        loss = losses.calculate_loss(q_model_out, premise_input_ids, tok)
-        loss += classify_with_bart(q_model_out)
-        curr_loss += loss.item()
+            # loss = model(question_input_ids, attention_mask=question_attention_mask, labels=premise_input_ids)[0]
+            q_model_pred = model(question_input_ids)['logits'][0].softmax(-1)
+            loss = losses.calculate_loss(q_model_pred, premise_input_ids, tok) - discriminator.gen_loss(q_model_pred)
+            curr_loss += loss.item()
 
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+        else:
+            fact = fact.to(device)
+            loss = discriminator.disc_loss(fact)
+            disc_optimizer.zero_grad()
+            loss.backward()
+            disc_optimizer.step()
 
         if i != 0 and i % 200 == 0:
             print(f"epoch {epoch} step {i}: {curr_loss / 200}")
@@ -79,10 +84,12 @@ for epoch in range(n_epochs):
                 for batch in test_loader:
                     if random.random() > print_test_each_time / len(test_loader):
                         continue
-                    question, premise = batch
+                    question, premise, _ = batch
                     q_tok = tok(question, return_tensors='pt')
                     question_input_ids = q_tok['input_ids'].to(device)
 
                     print(question)
                     print(tok.batch_decode(model.generate(question_input_ids), skip_special_tokens=True))
                     print()
+
+    # save_model
